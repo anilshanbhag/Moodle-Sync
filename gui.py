@@ -42,13 +42,11 @@ class AppForm(QMainWindow):
 
         self.username_tb = QLineEdit()
         self.username_tb.setMinimumWidth(200)
-
         self.password_tb = QLineEdit()
         self.password_tb.setEchoMode(QLineEdit.Password)
         self.password_tb.setMinimumWidth(200)
         
         self.save_credentials = QCheckBox("Remember Me")
-
         self.save_settings = QPushButton("&Login")
         QObject.connect( self.save_settings, SIGNAL("clicked()"), self.save)
 
@@ -122,9 +120,13 @@ class AppForm(QMainWindow):
         view = QListView()
         view.setModel(model)
         self.main_frame_box.addWidget(view)
-        self.main_frame_box.addWidget(self.start_sync)
 
+        self.pdfGet = QCheckBox("Get PDFs as well")
+        self.pdfGet.setCheckState(Qt.Checked)
+        self.pdfGet.setCheckable(True)
         self.setCentralWidget(self.main_frame)
+        self.main_frame_box.addWidget(self.pdfGet)
+        self.main_frame_box.addWidget(self.start_sync)
         self.main_frame.show()
 
     def save(self):
@@ -156,7 +158,7 @@ class AppForm(QMainWindow):
         folderNames={}
         for i in checklist:
             folderNames[i]=i
-        self.sync_handler.syncCourses(checklist,folderNames)
+        self.sync_handler.syncCourses(checklist,folderNames,(self.pdfGet.checkState()==Qt.Checked))
         print "Completed GUI"
 
     def create_status_bar(self):
