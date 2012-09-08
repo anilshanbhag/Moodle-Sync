@@ -39,10 +39,10 @@ class Sync:
                 self.courses[text[0].strip()] = link
         return self.courses.keys()
 
-    def syncCourses(self,storedCourses,folderNames):
+    def syncCourses(self,storedCourses,folderNames,getpdf):
         self.storedCourses=storedCourses
         self.folderNames=folderNames;
-
+        self.getpdf=getpdf
         for course in self.storedCourses:
             self.br.open(self.courses[course].url)
             assert self.br.viewing_html()
@@ -52,7 +52,6 @@ class Sync:
                 if "mod/resource/view" in link.url:
                     name=link.text.replace('[IMG]','')
                     allFiles[name] = link
-
             if(not(os.path.isdir(course))):
     			os.mkdir(course)
 
@@ -68,6 +67,11 @@ class Sync:
                     print [afilename]
                 if (not(afilename in storedFiles)):
                 	response=self.br.open(allFiles[afile].url)
+                	if(self.getpdf):
+                		if (response.info()["Content-type"].split(";")[0]=="text/html"):
+							for link in self.br.links():
+								if (link.url.find("pluginfile.php")!=-1):
+									response=self.br.open(link.url)
                 	extension=response.geturl().rsplit('.',1)[1]
                 	save_path=os.path.join(self.folderNames[course]+'/',afilename+'.'+extension)
                 	output=open(save_path,'w')
