@@ -1,4 +1,3 @@
-
 Moodle-Sync
 =================
 
@@ -26,16 +25,9 @@ python-mechanize
 Authors
 -------
 
-**Anil Shanbhag**
+**[Anil Shanbhag](http://github.com/anilshanbhag)**
 
-+ http://github.com/anilshanbhag
-+ http://www.cse.iitb.ac.in/~anil
-
-**Ashwin Paranjape**
-
-+ http://www.cse.iitb.ac.in/~ashwinp
-
-
+**[Ashwin Paranjape](http://www.cse.iitb.ac.in/~ashwinp)**
 
 Copyright and license
 ---------------------
