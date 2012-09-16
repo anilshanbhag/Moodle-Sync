@@ -103,7 +103,10 @@ class AppForm(QMainWindow):
 
     def updateUi(self):
         self.start_sync_button.setEnabled(True)
-        self.login_button.setEnabled(True)
+        try:
+            self.login_button.setEnabled(True)
+        except RuntimeError:
+            print "No Login button"
 
     def show_login_frame(self):
         self.main_frame.hide()
