@@ -106,7 +106,7 @@ class AppForm(QMainWindow):
         try:
             self.login_button.setEnabled(True)
         except RuntimeError:
-            print "No Login button"
+        	print "No Login button"
 
     def show_login_frame(self):
         self.main_frame.hide()
@@ -121,6 +121,7 @@ class AppForm(QMainWindow):
                 self.u,self.p = contents.split('|')
                 self.username_tb.setText(self.u)
                 self.password_tb.setText(self.p)
+                self.save_credentials.setCheckState(Qt.Checked) #If the user has ticked "remember me" befo
         except:
             print "Failed to load credentials :: Loading login frame"
 
@@ -176,7 +177,8 @@ class AppForm(QMainWindow):
             f = open("./.msync","w")
             f.write("%s|%s" % (u,p))
             f.close()
-
+        #else:
+        #    os.remove("./.msync") # Remove credentials if the user doesn't want to keep them remembered.
         self.isset_credentials = True
         self.u = u
         self.p = p
@@ -185,11 +187,15 @@ class AppForm(QMainWindow):
 
     def start_sync(self):
         checklist = []
-        for box in self.checkboxes:
-            if box.checkState() == Qt.Checked:
-                checklist.append(str(box.text()))
+        try:
+            for box in self.checkboxes:
+                if box.checkState() == Qt.Checked:
+                    checklist.append(str(box.text()))
 
-        print checklist
+            print checklist
+        except AttributeError:
+            print "No list... Reloading..."
+            self.sync.listCourses()            
         f = open("./.selected_list","w")
         f.write("|".join(checklist))
         f.close()
@@ -199,7 +205,6 @@ class AppForm(QMainWindow):
         self.start_sync_button.setEnabled(False)
         self.status_text.setText("Syncing ... ")
         self.sync.syncCourses(checklist, folderNames, (self.pdfGet.checkState()==Qt.Checked))
-        print "Completed GUI"
 
     def sync_done(self, msg):
         self.status_text.setText("Syncing ... ")

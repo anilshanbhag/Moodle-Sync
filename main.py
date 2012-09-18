@@ -1,11 +1,12 @@
 #!/usr/bin/python
 
+import re
 import mechanize
-import os
+import urllib, os
+#from BeautifulSoup import BeautifulSoup
 import math, random, sys
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-
 class Sync(QThread):
     def __init__(self, parent = None):
         QThread.__init__(self, parent)
@@ -57,6 +58,7 @@ class Sync(QThread):
         
         assert self.br.viewing_html()
 
+
     def listCourses(self):
         self.method = "listCourses"
         self.start()
@@ -81,36 +83,69 @@ class Sync(QThread):
             self.br.open(self.courses[course].url)
             assert self.br.viewing_html()
             allFiles = {}
-
-            for link in self.br.links():
+            links=self.br.links()
+            for link in links:
                 if "mod/resource/view" in link.url:
-                    name=link.text.replace('[IMG]','')
-                    allFiles[name] = link
+                    name=link.text.replace('[IMG]','').replace('File ','').replace(' File','')
+                    allFiles[name] = link.url
+                if "mod/folder" in link.url:
+                    dirName=link.text.replace('[IMG]','').replace('Folder ','')
+                    self.br.open(link.url)
+                    links2=self.br.links()
+                    for link2 in links2:
+                        if "mod_folder" in link2.url:
+                            name=link2.text.replace('[IMG]','').replace('File ','') #.rsplit('.',2)[0]
+                            name= name[0:len(name)/2]
+                            allFiles[name]=link2.url+"@"+dirName
             if(not(os.path.isdir(course))):
-                os.mkdir(course)
+    	           os.mkdir(course)
 
             storedFiles=os.listdir(self.folderNames[course])
             for i in xrange(0,len(storedFiles)):
                 storedFiles[i] = storedFiles[i].rsplit('.',1)[0].strip()
 
             for afile in allFiles:
+                flag=False
+                storelocation=[]
                 if afile.split()[-1] == "document":
                     afilename=afile.rsplit(' ',2)[0].strip()
                 else:
                     afilename=afile
                     print [afilename]
-                if (not(afilename in storedFiles)):
-                    response=self.br.open(allFiles[afile].url)
-                    if(self.getpdf):
-                        if (response.info()["Content-type"].split(";")[0]=="text/html"):
-                            for link in self.br.links():
-                                if (link.url.find("pluginfile.php")!=-1):
-                                    response=self.br.open(link.url)
-                    extension=response.geturl().rsplit('.',1)[1]
-                    save_path=os.path.join(self.folderNames[course]+'/',afilename+'.'+extension)
-                    output=open(save_path,'w')
-                    output.write(response.read())
-                    output.close()
+                if "mod_folder" in allFiles[afile]:
+                    dirName=allFiles[afile].split('@')[1] 
+                    relDir=allFiles[afile].split('@')[0].split('mod_folder/content/')[1].split('/',1)[1].replace('%20',' ')
+                    if not os.path.exists(self.folderNames[course]+'/'+dirName):
+                        os.makedirs(self.folderNames[course]+'/'+dirName)
+                        output=open(self.folderNames[course]+'/'+dirName+'/.synced','w')
+                        output.write('')
+                        output.close()                        
+                    for line in open(self.folderNames[course]+'/'+dirName+'/.synced','r').readlines():
+					    if relDir in line:
+						    flag=True
+                    if not(flag):
+                        output=open(self.folderNames[course]+'/'+dirName+'/.synced','a')
+                        output.write(relDir+'\n')
+                        output.close()
+                        d = os.path.dirname(self.folderNames[course]+'/'+dirName+"/"+relDir)
+                        if not os.path.exists(d):
+                             os.makedirs(d)
+                    storelocation=(dirName+'/'+relDir).rsplit('.',2)[0].split("/")
+                    afilename=storelocation[len(storelocation)-1].split(".")[0]
+                    storelocation=storelocation[0:len(storelocation)-1]
+                if (not((afilename in storedFiles)  or flag)):
+                	response=self.br.open(allFiles[afile])
+                	if(self.getpdf):
+                		if (response.info()["Content-type"].split(";")[0]=="text/html"):
+							for link in self.br.links():
+								if (link.url.find("pluginfile.php")!=-1):
+									response=self.br.open(link.url)
+                	extension=response.geturl().rsplit('.',1)[1].split('?')[0]
+                	save_path=os.path.join(*([self.folderNames[course]]+storelocation+[afilename+'.'+extension]))
+                	output=open(save_path,'w')
+                	output.write(response.read())
+                	output.close()
+
 
         self.emit(SIGNAL("sync_courses(QString)"), "done")
 
@@ -127,3 +162,4 @@ class Sync(QThread):
     
         self.exiting = True
         self.wait()
+
