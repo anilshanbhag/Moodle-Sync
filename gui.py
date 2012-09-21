@@ -171,7 +171,7 @@ class AppForm(QMainWindow):
         print "Adding Credentials"
         u = self.username_tb.text()
         p = self.password_tb.text()
-        print u,p
+        #print u,p
         if self.save_credentials.isChecked():
             print "Saving Credentials"
             f = open("./.msync","w")
@@ -207,7 +207,7 @@ class AppForm(QMainWindow):
         self.sync.syncCourses(checklist, folderNames, (self.pdfGet.checkState()==Qt.Checked))
 
     def sync_done(self, msg):
-        self.status_text.setText("Syncing ... ")
+        self.status_text.setText("Finished sync")
         self.start_sync_button.setEnabled(True)
 
     def create_status_bar(self):
